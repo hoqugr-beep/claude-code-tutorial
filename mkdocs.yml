@@ -1,10 +1,10 @@
 site_name: Claude Code Tutorial
 site_description: A comprehensive interactive tutorial for Claude Code — from beginner to advanced, covering GitHub, MCP, tools, and more.
 site_author: Paul Anderson
-site_url: https://paul-anderson-gdms.github.io/claude-code-tutorial/
+site_url: https://hoqugr-beep.github.io/claude-code-tutorial/
 
 repo_name: claude-code-tutorial
-repo_url: https://github.com/paul-anderson-gdms/claude-code-tutorial
+repo_url: https://github.com/hoqugr-beep/claude-code-tutorial
 
 theme:
   name: material
@@ -65,7 +65,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/paul-anderson-gdms/claude-code-tutorial
+      link: https://github.com/hoqugr-beep/claude-code-tutorial
 
 nav:
   - Home: index.md
