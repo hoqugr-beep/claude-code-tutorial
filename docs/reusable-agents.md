@@ -2,6 +2,9 @@
 
 ### Build one once, invoke it forever, share it with your team
 
+[:material-file-pdf-box: **Download this guide as a PDF**](reusable-agents.pdf){ .md-button }
+&nbsp; 11 pages, printable, includes every code snippet.
+
 ---
 
 A **subagent** is a specialized assistant you define in a Markdown file. It runs in its own
@@ -398,6 +401,177 @@ Then:
 ```
 
 The agent came with the clone. No install, no configuration. That's the whole point.
+
+---
+
+## 9. Adding an agent to GitHub, and downloading one from GitHub
+
+An agent is a single plain-text file. That makes GitHub the simplest distribution channel
+available — no marketplace, no plugin manifest, no install command.
+
+### 9.1 Push an agent to GitHub
+
+**If the agent belongs to a project**, it's already in the right place. Commit it:
+
+```bash
+git add .claude/agents/docs-reviewer.md
+git commit -m "Add docs-reviewer agent"
+git push -u origin main
+```
+
+Check your `.gitignore` first. A blanket `.claude/` entry is common and will silently drop the
+agent from the commit. If you have one, carve out an exception:
+
+```gitignore
+.claude/*
+!.claude/agents/
+.claude/settings.local.json
+```
+
+Verify before you push — `git check-ignore` tells you the truth:
+
+```bash
+git check-ignore -v .claude/agents/docs-reviewer.md   # no output = not ignored, you're fine
+git status --short .claude/                            # should list the file
+```
+
+**If you want a personal agent library** that isn't tied to one project, make a dedicated repo:
+
+```bash
+mkdir claude-agents && cd claude-agents
+git init
+mkdir agents
+cp ~/.claude/agents/*.md agents/
+printf '# My Claude Code agents\n\nDrop these into `~/.claude/agents/`.\n' > README.md
+git add -A
+git commit -m "Initial agent library"
+git branch -M main
+git remote add origin https://github.com/YOUR-USER/claude-agents.git
+git push -u origin main
+```
+
+Add a README that says what each agent does and which tools it holds. People decide whether to
+trust an agent from its README.
+
+!!! tip "Let Claude do it"
+    ```
+    > commit the docs-reviewer agent and push it to a new public repo called claude-agents
+    ```
+
+### 9.2 Download a single agent from GitHub
+
+The fastest path. Open the file on GitHub, click **Raw**, copy the URL, and curl it into place:
+
+```bash
+mkdir -p ~/.claude/agents
+curl -fsSL -o ~/.claude/agents/docs-reviewer.md \
+  https://raw.githubusercontent.com/hoqugr-beep/claude-code-tutorial/main/.claude/agents/docs-reviewer.md
+```
+
+Swap `~/.claude/agents/` for `.claude/agents/` to scope it to the current project instead. Raw
+URL anatomy:
+
+```
+https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path-to-file>
+```
+
+Or with the GitHub CLI, which works on private repos you have access to:
+
+```bash
+gh api repos/hoqugr-beep/claude-code-tutorial/contents/.claude/agents/docs-reviewer.md \
+  --jq '.content' | base64 -d > ~/.claude/agents/docs-reviewer.md
+```
+
+Or just ask Claude:
+
+```
+> download the docs-reviewer agent from
+  github.com/hoqugr-beep/claude-code-tutorial into ~/.claude/agents/
+```
+
+!!! danger "Read the file before you use it"
+    An agent file is a system prompt plus a tool allowlist — and possibly `hooks` (shell commands
+    that run automatically on tool events) and `mcpServers` (external servers it may reach).
+    Downloading one is closer to installing a script than saving a document. Open it, read the
+    frontmatter, and confirm the tool list matches what the agent claims to do before you invoke
+    it. Be especially wary of `permissionMode: bypassPermissions` and any `hooks` block.
+
+    Plugin-sourced agents are safer on this axis: `hooks`, `mcpServers`, and `permissionMode` are
+    ignored entirely when an agent loads from a plugin.
+
+### 9.3 Clone a whole repo of agents
+
+If a repo is a library of several agents, clone it and copy what you want:
+
+```bash
+git clone https://github.com/YOUR-USER/claude-agents.git
+cp claude-agents/agents/*.md ~/.claude/agents/
+```
+
+To stay up to date instead of taking a one-time snapshot, symlink the cloned directory and
+`git pull` when you want the latest:
+
+```bash
+git clone https://github.com/YOUR-USER/claude-agents.git ~/src/claude-agents
+ln -s ~/src/claude-agents/agents ~/.claude/agents/shared
+# later:
+git -C ~/src/claude-agents pull
+```
+
+Because `~/.claude/agents/` is scanned recursively, agents inside the symlinked `shared/`
+subfolder load normally. The subfolder name doesn't change how they're invoked — identity comes
+from the `name` field only.
+
+For a big monorepo where you only want the agents directory, use a sparse checkout:
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/some-org/big-repo.git
+cd big-repo
+git sparse-checkout set .claude/agents
+cp .claude/agents/*.md ~/.claude/agents/
+```
+
+### 9.4 Install from GitHub as a plugin
+
+For versioned agents you don't want to copy by hand, point Claude Code at the marketplace repo
+and let it manage updates:
+
+```
+/plugin marketplace add YOUR-USER/claude-agents-marketplace
+/plugin install my-agents@my-plugins
+/reload-plugins
+```
+
+Private repos work the same way, as long as your git credentials can read them — this is the
+normal setup for keeping an internal team agent library. Users refresh the catalog with
+`/plugin marketplace update`.
+
+Trade-offs versus copying a raw file:
+
+| | Raw file / clone | Marketplace plugin |
+|---|---|---|
+| Setup for the author | None — just commit | Needs `plugin.json` + `marketplace.json` |
+| Updates for the user | Manual re-download or `git pull` | `/plugin marketplace update` |
+| Versioning | Whatever the branch has | Pinned by `version` field |
+| Agent name | Plain: `@agent-docs-reviewer` | Namespaced: `@agent-my-agents:docs-reviewer` |
+| `hooks` / `mcpServers` / `permissionMode` | Honored | Ignored for safety |
+
+### 9.5 After downloading — confirm it loaded
+
+```bash
+ls ~/.claude/agents/          # file is there
+claude                        # start (or restart) Claude Code
+```
+
+```
+/context                      # agent listed under "Custom Agents"
+> @agent-docs-reviewer review my recent changes
+```
+
+If it doesn't appear: you likely just created `~/.claude/agents/` for the first time, and the
+file watcher only covers directories that existed at session start — restart Claude Code once.
+Also check that the `name` field contains no `:` (reserved for plugin scoping; such files fail
+to load silently) and run `/doctor` to catch duplicate names.
 
 ---
 
