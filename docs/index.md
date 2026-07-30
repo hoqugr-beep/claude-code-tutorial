@@ -1144,6 +1144,13 @@ Claude automatically uses sub-agents for:
 > every day at 9am, summarize any new GitHub issues and PRs
 ```
 
+### 16.6 Defining Your Own Reusable Agents
+
+Beyond the built-in sub-agents, you can define your own in `.claude/agents/*.md` — with a custom
+system prompt, a locked-down tool list, and its own model — then commit it so your team gets it
+too. See **[Reusable Agents](reusable-agents.md)** for the full walkthrough, including how to
+invoke one and how to package it as an installable plugin.
+
 ---
 
 ## 17. Claude API & Model Selection
