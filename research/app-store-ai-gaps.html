@@ -1,0 +1,659 @@
+<title>App Store AI Gaps</title>
+<style>
+  :root {
+    --paper:      #F6F7F9;
+    --surface:    #FFFFFF;
+    --ink:        #10151C;
+    --muted:      #5C6672;
+    --hairline:   #D8DDE4;
+    --accent:     #1B4FD9;
+    --accent-dim: #E7ECFB;
+    --rust:       #B4431F;
+    --rust-dim:   #F7E9E4;
+    --green:      #1D6B4F;
+    --green-dim:  #E3EFE9;
+
+    --f-display: ui-sans-serif, system-ui, "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    --f-body:    ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --f-data:    ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0C1017;
+      --surface:    #141A22;
+      --ink:        #E6EAF0;
+      --muted:      #8B95A3;
+      --hairline:   #262F3A;
+      --accent:     #7BA3FF;
+      --accent-dim: #16213A;
+      --rust:       #E38A66;
+      --rust-dim:   #2B1B15;
+      --green:      #5FBE95;
+      --green-dim:  #14251E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #0C1017;
+    --surface:    #141A22;
+    --ink:        #E6EAF0;
+    --muted:      #8B95A3;
+    --hairline:   #262F3A;
+    --accent:     #7BA3FF;
+    --accent-dim: #16213A;
+    --rust:       #E38A66;
+    --rust-dim:   #2B1B15;
+    --green:      #5FBE95;
+    --green-dim:  #14251E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 64px 0 0;
+  }
+
+  .kicker {
+    font-family: var(--f-data);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .kicker span::before { content: "·"; margin-right: 14px; color: var(--hairline); }
+  .kicker span:first-child::before { content: none; margin: 0; }
+
+  h1 {
+    font-family: var(--f-display);
+    font-size: clamp(34px, 6vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* ---------- shared blocks ---------- */
+
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  h2 {
+    font-family: var(--f-display);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  h3 {
+    font-family: var(--f-display);
+    font-size: 22px;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p { margin: 0; text-wrap: pretty; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  strong { font-weight: 700; }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--muted);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 15.5px;
+  }
+  .note .label {
+    font-family: var(--f-data);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ---------- metric strip ---------- */
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+  }
+  .metric {
+    background: var(--surface);
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .metric .figure {
+    font-family: var(--f-data);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .metric .caption {
+    font-family: var(--f-display);
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .metric.up   .figure { color: var(--rust); }
+  .metric.down .figure { color: var(--accent); }
+
+  /* ---------- tables ---------- */
+
+  .scroller { overflow-x: auto; border: 1px solid var(--hairline); background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  th {
+    font-family: var(--f-display);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  td.idea { font-family: var(--f-display); font-weight: 600; white-space: nowrap; }
+  td.rivals { font-family: var(--f-data); font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- criteria ---------- */
+
+  ol.criteria { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; counter-reset: c; }
+  ol.criteria li {
+    counter-increment: c;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 14px;
+    font-size: 16px;
+  }
+  ol.criteria li::before {
+    content: counter(c);
+    font-family: var(--f-data);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    padding-top: 5px;
+  }
+  ol.criteria b { font-family: var(--f-display); font-size: 15px; }
+
+  /* ---------- ranked opportunity records ---------- */
+
+  .record {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+  }
+  .record > header {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .rank {
+    font-family: var(--f-data);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    flex: none;
+    padding-top: 2px;
+  }
+  .record > header > div { display: flex; flex-direction: column; gap: 8px; }
+
+  .chip {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--f-data);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 2px;
+  }
+  .chip.best   { background: var(--green-dim);  color: var(--green); }
+  .chip.strong { background: var(--accent-dim); color: var(--accent); }
+  .chip.caveat { background: var(--rust-dim);   color: var(--rust); }
+
+  dl { margin: 0; display: flex; flex-direction: column; }
+  dl > div {
+    display: grid;
+    grid-template-columns: 108px 1fr;
+    gap: 20px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--hairline);
+    font-size: 15.5px;
+  }
+  dl > div:last-child { border-bottom: none; }
+  dt {
+    font-family: var(--f-data);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 5px;
+  }
+  dd { margin: 0; }
+  dd ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+
+  @media (max-width: 560px) {
+    dl > div { grid-template-columns: 1fr; gap: 6px; }
+    dt { padding-top: 0; }
+  }
+
+  /* ---------- skip list ---------- */
+
+  .skip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .skip li {
+    font-family: var(--f-data);
+    font-size: 12.5px;
+    color: var(--muted);
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    padding: 6px 10px;
+    text-decoration: line-through;
+    text-decoration-color: var(--rust);
+  }
+
+  /* ---------- sources ---------- */
+
+  .sources { columns: 2; column-gap: 32px; font-size: 13.5px; line-height: 1.5; margin: 0; padding-left: 18px; }
+  .sources li { break-inside: avoid; margin-bottom: 9px; }
+  @media (max-width: 620px) { .sources { columns: 1; } }
+
+  footer {
+    border-top: 1px solid var(--hairline);
+    padding-top: 20px;
+    font-family: var(--f-data);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">
+      <span>Opportunity analysis</span>
+      <span>Apple App Store</span>
+      <span>August 2026</span>
+    </div>
+    <h1>Where the wrappers can't follow</h1>
+    <p class="standfirst">There are almost no empty niches left in consumer AI — and chasing one is the wrong strategy. The openings are the niches crowded with weak apps that have no way to defend the position.</p>
+  </header>
+
+  <div class="note">
+    <div class="label">Method &amp; limits</div>
+    <p>This environment's network policy blocks <code>itunes.apple.com</code> and <code>apps.apple.com</code>, so listings, ratings, and rank data could not be enumerated directly. The analysis is built from market intelligence (Appfigures via TechCrunch, RevenueCat's <em>State of Subscription Apps 2026</em>, Business of Apps), search-surfaced App Store listings — which reliably show <em>what exists</em> in a niche — and demand-side evidence from regulatory filings and denial-rate statistics.</p>
+    <p><strong>Not verified:</strong> star ratings, review counts, downloads, or per-app revenue for any incumbent named below. Treat every claim of competitor weakness as a hypothesis to confirm in Appfigures or Sensor Tower before committing engineering time.</p>
+  </div>
+
+  <section>
+    <h2>The state of the field</h2>
+    <div class="metrics">
+      <div class="metric up">
+        <div class="figure">+80%</div>
+        <div class="caption">iOS app releases, Q1 2026 vs 2025 (+89% in April)</div>
+      </div>
+      <div class="metric up">
+        <div class="figure">+41%</div>
+        <div class="caption">Revenue per customer, AI apps vs non-AI</div>
+      </div>
+      <div class="metric down">
+        <div class="figure">21.1%</div>
+        <div class="caption">Annual retention for AI apps, vs 30.7% non-AI</div>
+      </div>
+      <div class="metric down">
+        <div class="figure">4.6%</div>
+        <div class="caption">Share of all apps that reach $10K/month</div>
+      </div>
+    </div>
+    <p>Vibe-coding tools drove the release surge, which means any idea expressible as <em>“photograph X → LLM explains X”</em> is cloned within weeks. AI apps convert beautifully and then churn 30% faster than everything else, because the job is finished after one use. That single number should govern the choice of what to build.</p>
+  </section>
+
+  <section>
+    <h2>Seven obvious ideas, already taken</h2>
+    <p>I probed each of these as if it were a fresh idea. Every one already had 5–15 iOS apps, most shipped within the last twelve months.</p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>The idea</th><th>Already shipping</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="idea">Home repair diagnosis</td><td class="rivals">Handyman AI · SnapFix · HowToFix · Handy AI · FixMynd · Fix It</td></tr>
+          <tr><td class="idea">Pet symptom triage</td><td class="rivals">Pet Check AI · Voyage · Vetify · Buddydoc · PerkyPet · Triage Paw</td></tr>
+          <tr><td class="idea">Lease review for renters</td><td class="rivals">LeaseLogic · ReadYourLease · SaferLease · DefendMyRent · RenterAI · Justee</td></tr>
+          <tr><td class="idea">Allergy &amp; menu scanning</td><td class="rivals">SafeEat · SafeAllergy · Foodient · IngrediCheck · Fig · AllerScan</td></tr>
+          <tr><td class="idea">Resale listing from photos</td><td class="rivals">Underpriced AI · Spadeberry · ResaleOS · Voolist · FlowLister</td></tr>
+          <tr><td class="idea">Medical bill scanning</td><td class="rivals">BillMD · MedBillAI · Bill Shield · Medical Bill Negotiator: IQ · BillMeLess</td></tr>
+          <tr><td class="idea">IEP / 504 advocacy</td><td class="rivals">IEP Compass · EveryIEP · IEP Advocate.ai · AdvocateIQ · Undivided</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Presence is not dominance. Nearly all of these are thin, recent, single-shot wrappers with no data asset and no reason to be opened twice — which is exactly what makes several of these categories still winnable by someone who builds the defensible version.</p>
+  </section>
+
+  <section>
+    <h2>The filter</h2>
+    <p>An idea is worth building in 2026 only if it clears all five.</p>
+    <ol class="criteria">
+      <li><span><b>Wrapper-resistant.</b> Value comes from data, integrations, or workflow the model alone can't supply. If GPT-in-a-textbox does 80% of it, skip.</span></li>
+      <li><span><b>Recurring trigger.</b> Something in the user's life re-fires the need on a schedule. This is the direct antidote to that 21.1% retention figure.</span></li>
+      <li><span><b>High dollar stakes.</b> The app recovers or protects real money, making a $10–30/mo subscription trivial to justify.</span></li>
+      <li><span><b>Clear payer.</b> Ideally an anxious payer who isn't the end user — adult children, parents — or an ROI that's arithmetic rather than vibes.</span></li>
+      <li><span><b>Compounding moat.</b> A proprietary corpus, an integration nobody wants to build, or a regulatory posture competitors can't casually copy.</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Five openings, ranked by conviction</h2>
+
+    <article class="record">
+      <header>
+        <div class="rank">01</div>
+        <div>
+          <h3>A year-round healthcare claims copilot</h3>
+          <span class="chip best">Strongest pick</span>
+        </div>
+      </header>
+      <dl>
+        <div>
+          <dt>Problem</dt>
+          <dd>Medicare Advantage insurers denied 4.1M of ~53M prior-auth requests in 2024. Only <strong>11.5% were appealed</strong> — and <strong>80.7% of those appeals won</strong> in full or part. On the ACA side, ~73M in-network denials in 2023, under 1% appealed. That gap is money on the floor because appealing is confusing and the deadlines are easy to miss.</dd>
+        </div>
+        <div>
+          <dt>What exists</dt>
+          <dd>Web tools and nonprofits — Counterforce Health, Claimable (~$50/appeal), Sheer Health. On iOS, only one-shot scanners: BillMD, MedBillAI, Bill Shield. Each treats a bill as a document to analyze, produces a letter, and gets deleted. None owns the longitudinal case.</dd>
+        </div>
+        <div>
+          <dt>The moat</dt>
+          <dd>
+            <ul>
+              <li>Continuous ingestion — email rule, EOB scanning, payer-portal connection — so the app accumulates a household's claim history</li>
+              <li>Reconcile <strong>EOB against bill against plan document</strong>: the real error-finding step, which needs the plan's own language, not a generic guess</li>
+              <li>Statutory appeal deadlines as first-class objects with escalating reminders — the retention engine</li>
+              <li>A denial-code and payer-behavior corpus: which arguments overturn which codes at which insurer. This compounds and cannot be cloned.</li>
+            </ul>
+          </dd>
+        </div>
+        <div>
+          <dt>Money</dt>
+          <dd>$15–25/mo family plan, or free scan plus a $40–75 success-contingent appeal package. One overturned denial pays for years.</dd>
+        </div>
+        <div>
+          <dt>Risk</dt>
+          <dd>You'll handle PHI even without covered-entity status. Stay clear of anything reading as practicing law or medicine. Payer-portal integration is the hard engineering — and precisely why the position defends itself.</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="record">
+      <header>
+        <div class="rank">02</div>
+        <div>
+          <h3>A family verification protocol against voice-clone scams</h3>
+          <span class="chip strong">Best retention profile</span>
+        </div>
+      </header>
+      <dl>
+        <div>
+          <dt>Problem</dt>
+          <dd>AI scams cost Americans aged 60+ <strong>$352M in 2025</strong> across 3,100+ reported victims. The cloned-voice grandparent call is the emblematic case.</dd>
+        </div>
+        <div>
+          <dt>The insight</dt>
+          <dd>Detection fails at the moment of attack. Pindrop, Reality Defender, Hiya, and McAfee's detector all degrade to <strong>60–75% accuracy</strong> on live compressed VoIP audio with a panicking listener. Every consumer app in the space — SeniorShield.ai, SeniorSafe, Fraud Monitor, ZoraSafe, Carefull Companion — sells detection anyway. What security experts actually prescribe, and no app has productized, is a pre-agreed family code word, callback verification on a number you already had, and a forced pause.</dd>
+        </div>
+        <div>
+          <dt>The moat</dt>
+          <dd>
+            <ul>
+              <li>Family circle: shared code word, verified callback numbers, a roster of who would never ask for money</li>
+              <li>One-tap “verify this caller” that pings the real family member out-of-band and returns a green/red answer in seconds</li>
+              <li>A transaction speed bump — adult child gets a push on an unusual payment, gift-card run, or wire, with hold-and-confirm</li>
+              <li>On-device text screening as a <em>supporting</em> feature, honestly positioned — never the headline claim</li>
+            </ul>
+          </dd>
+        </div>
+        <div>
+          <dt>Money</dt>
+          <dd>$12–20/mo per family. The payer is the adult child — sandwich generation, 40–59, motivated by fear and guilt, and nobody cancels a protection subscription while the parent is alive. The family graph is a genuine network moat.</dd>
+        </div>
+        <div>
+          <dt>Risk</dt>
+          <dd>Don't over-promise detection accuracy; the FTC is active here. Onboarding the elderly parent is the whole product problem — solve it by having the adult child do setup remotely.</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="record">
+      <header>
+        <div class="rank">03</div>
+        <div>
+          <h3>On-device-only AI for one genuinely sensitive vertical</h3>
+          <span class="chip strong">Best margins</span>
+        </div>
+      </header>
+      <dl>
+        <div>
+          <dt>Opening</dt>
+          <dd>WWDC 2026 expanded Apple's Foundation Models framework: a 3B-parameter on-device model plus cloud models behind one Swift interface, with <strong>free Private Cloud Compute access for developers under 2M first-time downloads</strong>. Analyses of Reddit app-wish posts find privacy is the single most common reason people want an alternative to an app they already use — with explicit willingness to pay a premium.</dd>
+        </div>
+        <div>
+          <dt>What it unlocks</dt>
+          <dd>An app that can truthfully say <em>your data never leaves this device</em> — no API key, no round trip, nothing to disclose in the privacy label — at near-zero marginal inference cost. A solo developer runs 90%+ margins where a cloud wrapper runs 40%.</dd>
+        </div>
+        <div>
+          <dt>Verticals</dt>
+          <dd>Pick one and go deep: personal medical records and lab-result interpretation; addiction recovery; sexual and reproductive health; immigration-sensitive documentation; therapy self-notes.</dd>
+        </div>
+        <div>
+          <dt>The moat</dt>
+          <dd>Regulation, used as architecture. <strong>Illinois, Nevada, Rhode Island, and Maine now ban AI from delivering therapy</strong>; Colorado, Tennessee, and Vermont restrict it; Utah mandates disclosure; New York, California, and Nebraska add crisis-referral rules. 36 states introduced 70+ chatbot bills in Q1 2026, and the FTC has an open companion-chatbot inquiry. Incumbents will spend two years retrofitting. An app built from day one as on-device, not-therapy, reflective tooling is compliant by construction — and can market it.</dd>
+        </div>
+        <div>
+          <dt>Money</dt>
+          <dd>$8–15/mo, with the privacy claim carrying the entire conversion argument.</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="record">
+      <header>
+        <div class="rank">04</div>
+        <div>
+          <h3>The estate administrator's companion</h3>
+          <span class="chip strong">One-time purchase</span>
+        </div>
+      </header>
+      <dl>
+        <div>
+          <dt>Problem</dt>
+          <dd>Settling a parent's estate runs roughly <strong>570 hours across 16 months</strong> — a second full-time job handed to someone who is grieving. Procedural, deadline-laden, jurisdiction-specific.</dd>
+        </div>
+        <div>
+          <dt>What exists</dt>
+          <dd>Atticus, SwiftProbate, EstateExec, Empathy, Trust &amp; Will, Executor.org. Real competition — but web-first, and mostly checklist software rather than something that reads your actual documents.</dd>
+        </div>
+        <div>
+          <dt>The moat</dt>
+          <dd>Mobile-native, document-driven execution: photograph the death certificate, the will, the statements, the letters that keep arriving — and get a county-specific task graph with filing deadlines plus generated institution-specific letters, since every bank and insurer has its own process. SwiftProbate's own pitch cites 3,200+ county probate guides and 160+ institution guides; that corpus <em>is</em> the moat, and it is buildable.</dd>
+        </div>
+        <div>
+          <dt>Money</dt>
+          <dd><strong>$99–249 one-time.</strong> Given that AI apps churn 30% faster than everything else, a finite, expensive, painful project is arguably the better business than a subscription — you aren't fighting retention at all.</dd>
+        </div>
+        <div>
+          <dt>Risk</dt>
+          <dd>Unauthorized-practice-of-law boundaries: position as document preparation and organization, never advice. The highest integrity bar on this list — these users are grieving.</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="record">
+      <header>
+        <div class="rank">05</div>
+        <div>
+          <h3>Kids' AI oversight</h3>
+          <span class="chip caveat">Verify feasibility first</span>
+        </div>
+      </header>
+      <dl>
+        <div>
+          <dt>The gap</dt>
+          <dd>No parental-control app can read the content of a child's conversations with an AI companion. Bark, Aura, Qustodio, and BrightCanary all monitor social and messaging, but AI chats travel over encrypted API connections they cannot intercept. Parents are asking for this and regulators are pushing the same way.</dd>
+        </div>
+        <div>
+          <dt>Why fifth</dt>
+          <dd>The gap exists <em>because it is technically hard on iOS</em>, not because nobody thought of it. You cannot meaningfully intercept another app's TLS traffic on a non-jailbroken iPhone.</dd>
+        </div>
+        <div>
+          <dt>Viable shape</dt>
+          <dd>Not a monitor but a purpose-built kid/teen AI with parental visibility designed in — the category HeyOtto is beginning to occupy. Parent sees themes and risk flags rather than full transcripts, the AI is age-appropriate by construction, and safety escalation is built in.</dd>
+        </div>
+        <div>
+          <dt>Money</dt>
+          <dd>$10–15/mo family. Parents are a proven-paying segment in safety software.</dd>
+        </div>
+        <div>
+          <dt>Risk</dt>
+          <dd>Directly in the blast radius of 70+ pending state bills and an active FTC inquiry. Build only if you'll treat compliance as a core feature rather than a tax — which, as with #3, is also the moat.</dd>
+        </div>
+      </dl>
+    </article>
+  </section>
+
+  <section>
+    <h2>Ship App Intents on day one, whatever you build</h2>
+    <p>iOS 27 deprecates SiriKit and makes App Intents the <em>only</em> path into Siri's agentic workflows. Siri now composes multi-step actions across apps, and apps without published intents are simply dropped from the composition. It's becoming a discovery channel in its own right, and the capability gap between intent-enabled and intent-less apps is about to be one users notice. A few days of work, and the highest-leverage non-feature on this list.</p>
+  </section>
+
+  <section>
+    <h2>What to skip</h2>
+    <p>Saturated with near-identical wrappers, no position left for a new entrant without a distribution advantage.</p>
+    <ul class="skip">
+      <li>Home repair diagnosis</li>
+      <li>Pet symptom triage</li>
+      <li>Lease review</li>
+      <li>Allergy scanning</li>
+      <li>Resale listing generation</li>
+      <li>One-shot bill scanning</li>
+      <li>Generic ADHD coaching</li>
+      <li>AI companions</li>
+      <li>Photo enhancers</li>
+      <li>Generic assistant chat</li>
+      <li>Headshot generators</li>
+    </ul>
+    <p>Note on ADHD coaching specifically: the incumbents' failure mode is abandonment, not capability. A better chatbot does not fix that.</p>
+  </section>
+
+  <section>
+    <h2>Before writing any code</h2>
+    <p>Spend a day in Appfigures or Sensor Tower on whichever of the five appeals:</p>
+    <ol class="criteria">
+      <li><span>Pull ratings, review counts, and revenue estimates for the named incumbents. <b>Look for niches where the top three apps are all under 4.3 stars.</b></span></li>
+      <li><span>Read the 1–3 star reviews for the exact feature requests users are already making.</span></li>
+      <li><span>Confirm nobody has quietly raised money and shipped the defensible version while the wrapper apps fought over the shallow end.</span></li>
+    </ol>
+    <p>If you want a single bet: <strong>the healthcare claims copilot</strong>, for the largest verifiable dollar pain and the strongest compounding data asset — or <strong>the family scam shield</strong>, if you'd rather have the best retention profile and the easiest story to sell to the person holding the credit card.</p>
+  </section>
+
+  <section>
+    <h2>Sources</h2>
+    <ul class="sources">
+      <li><a href="https://techcrunch.com/2026/04/18/the-app-store-is-booming-again-and-ai-may-be-why/">The App Store is booming again — TechCrunch</a></li>
+      <li><a href="https://www.revenuecat.com/state-of-subscription-apps">State of Subscription Apps 2026 — RevenueCat</a></li>
+      <li><a href="https://techcrunch.com/2026/03/10/ai-powered-apps-struggle-with-long-term-retention-new-report-shows">AI apps and long-term retention — TechCrunch</a></li>
+      <li><a href="https://www.localogy.com/2026/03/do-ai-apps-have-more-user-churn-than-non-ai-apps/">AI app churn data — Localogy</a></li>
+      <li><a href="https://www.businessofapps.com/data/ai-app-market/">AI App Revenue Statistics — Business of Apps</a></li>
+      <li><a href="https://stateline.org/2025/11/20/patients-deploy-bots-to-battle-health-insurers-that-deny-care/">Patients deploy bots against denials — Stateline</a></li>
+      <li><a href="https://www.pymnts.com/artificial-intelligence-2/2026/insurance-denials-meet-their-match-in-ai-powered-appeals/">AI-powered appeals — PYMNTS</a></li>
+      <li><a href="https://www.counterforcehealth.org/">Counterforce Health</a></li>
+      <li><a href="https://seniors.hcsk.org/ai-powered-scams-targeting-seniors/">AI scams targeting seniors — HCSK</a></li>
+      <li><a href="https://cybrvault.com/blog/ai-voice-scams-2026-deepfake-phone-calls">AI voice scams 2026 — Cybrvault</a></li>
+      <li><a href="https://www.forbes.com/sites/technology/article/ai-generated-scams/">AI scams are rising — Forbes</a></li>
+      <li><a href="https://appbot.co/blog/apple-wwdc-2026-ai-foundation-model-update/">WWDC 2026 Foundation Models — Appbot</a></li>
+      <li><a href="https://www.callstack.com/blog/on-device-ai-after-wwdc-2026-whats-new">On-device AI after WWDC 2026 — Callstack</a></li>
+      <li><a href="https://psychology.com/ai-therapy/state-bans">Which states ban AI therapy — Psychology.com</a></li>
+      <li><a href="https://www.beckersbehavioralhealth.com/ai-2/5-states-restrict-ai-therapy-chatbots-in-2026/">5 states restrict AI therapy — Becker's</a></li>
+      <li><a href="https://qz.com/state-laws-restricting-ai-mental-health-care-guide-072826">State AI mental health laws — Quartz</a></li>
+      <li><a href="https://www.swiftprobate.com/blog/best-ai-tools-estate-executors">Probate apps for executors — SwiftProbate</a></li>
+      <li><a href="https://www.weareatticus.com/">Atticus</a></li>
+      <li><a href="https://www.elayne.com/resources/best-estate-administration-software-tools">Estate administration tools — Elayne</a></li>
+      <li><a href="https://www.heyotto.app/blog/ai-with-parental-controls">What parental controls don't cover — HeyOtto</a></li>
+      <li><a href="https://ecorpit.com/ios-27-app-store-ai-agents-app-intents-developer-strategy-2026/">iOS 27 App Intents strategy — eCorpIT</a></li>
+      <li><a href="https://www.techbetweenthelines.com/app-intents-are-the-new-aso-how-siri-ai-will-discover-apps/">App Intents are the new ASO</a></li>
+      <li><a href="https://digitalbiztalk.com/article/what-9300-reddit-posts-reveal-about-app-gaps-in-2026">9,300 Reddit app-wish posts — Digital Biz Talk</a></li>
+      <li><a href="https://blog.saner.ai/best-adhd-apps/">ADHD apps tested — Saner.ai</a></li>
+    </ul>
+  </section>
+
+  <footer>Prepared 11 August 2026 · Competitive claims unverified against ASO data — confirm before committing engineering time</footer>
+
+</div>
