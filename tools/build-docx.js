@@ -12,6 +12,9 @@ const {
 
 const SRC = process.argv[2];
 const OUT = process.argv[3];
+// Optional cover credit line. Defaults to this repo so the tutorial build
+// needs no extra argument.
+const COVER_NOTE = process.argv[4] || "github.com/hoqugr-beep/claude-code-tutorial";
 
 // ---------- page geometry (US Letter, 1in margins) ----------
 const PAGE_W = 12240, PAGE_H = 15840, MARGIN = 1440;
@@ -331,14 +334,23 @@ if (tocStart !== -1) {
 
 // Title and the "Last Updated" line become the cover; drop them from the flow.
 const titleBlock = blocks.find((b) => b.type === "heading" && b.level === 1);
-const title = titleBlock ? titleBlock.text : "Claude Code Tutorial";
+const title = titleBlock ? titleBlock.text : "Untitled";
+// Remove the title before anything else looks for "the first chapter" — the
+// H1 is itself a level-1 heading, so leaving it in makes that search match at
+// index 0 and swallow the front matter that follows.
+blocks = blocks.filter((b) => b !== titleBlock);
+
 let subtitle = "";
 const subIdx = blocks.findIndex((b) => b.type === "heading" && b.level === 3);
 if (subIdx !== -1 && subIdx < 3) { subtitle = blocks[subIdx].text; blocks.splice(subIdx, 1); }
-const metaIdx = blocks.findIndex((b) => b.type === "quote" && /last updated/i.test(b.text));
+
+// Any blockquote ahead of the first chapter is front matter, not body text —
+// it belongs on the cover rather than stranded after the contents page.
+const firstChapter = blocks.findIndex((b) => b.type === "heading" && b.level <= 2);
+const metaIdx = blocks.findIndex(
+  (b, i) => b.type === "quote" && (firstChapter === -1 || i < firstChapter));
 let meta = "";
-if (metaIdx !== -1 && metaIdx < 4) { meta = plain(blocks[metaIdx].text); blocks.splice(metaIdx, 1); }
-blocks = blocks.filter((b) => b !== titleBlock);
+if (metaIdx !== -1) { meta = plain(blocks[metaIdx].text); blocks.splice(metaIdx, 1); }
 // leading rules left over from the front matter
 while (blocks.length && blocks[0].type === "hr") blocks.shift();
 
@@ -354,7 +366,7 @@ const cover = [
     new TextRun({ text: meta, size: 19, color: MUTED, font: BODY_FONT }),
   ]})] : []),
   new Paragraph({ spacing: { before: 120 }, children: [
-    new TextRun({ text: "github.com/hoqugr-beep/claude-code-tutorial", size: 19, color: MUTED, font: BODY_FONT }),
+    new TextRun({ text: COVER_NOTE, size: 19, color: MUTED, font: BODY_FONT }),
   ]}),
   new Paragraph({ children: [new PageBreak()] }),
   new Paragraph({ spacing: { after: 200 }, heading: HeadingLevel.HEADING_1,
