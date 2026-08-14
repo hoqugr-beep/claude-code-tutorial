@@ -1,0 +1,66 @@
+# Copy to clients.yaml and edit. One entry per paying client.
+#
+# cap_usd is the field that protects your margin. Set it to roughly 3-5x the
+# client's expected monthly usage: enough headroom for a busy month, low enough
+# that a runaway loop stops before it costs real money. The run halts cleanly
+# when a client reaches its cap and tells you why.
+
+clients:
+  - id: acme
+    name: Acme Building Supplies
+    cap_usd: 40
+
+    # Defaults to the most capable model. Step down only once your own evals
+    # show quality holds on this client's real documents.
+    model: claude-opus-5
+
+    # low | medium | high | xhigh | max. Sweep these on real cases before
+    # settling — defaults carried over from another engagement rarely transfer.
+    effort: high
+
+    # Who gets told when a run finishes. Used in summaries; wire to your mail
+    # provider in deliver.py.
+    deliver_to:
+      - accounts@acme.example
+
+    # This is the whole product. It sits in the cached prefix, so it costs
+    # almost nothing to make it thorough — be specific about edge cases, use
+    # the client's own vocabulary, and say what to do when something is
+    # ambiguous rather than leaving it to guess.
+    instructions: |
+      You extract structured records from supplier invoices for a building
+      supplies merchant.
+
+      Rules:
+      - Dates are DD/MM/YYYY on the source documents. Always output YYYY-MM-DD.
+      - "Nett" on these invoices means the subtotal before tax.
+      - Delivery charges are a line item, not a tax.
+      - If an invoice covers multiple purchase orders, extract it as one record
+        and note the PO numbers in the review reason.
+      - Amounts are in GBP unless the document says otherwise.
+
+      Set needs_review to true, with a specific reason, when any of these hold:
+      - the line items do not sum to the stated subtotal
+      - the total does not equal subtotal plus tax
+      - any figure is illegible or missing
+      - the supplier name does not appear on the document
+
+      Never guess at a number you cannot read. Flag it for review instead.
+
+  - id: northwind
+    name: Northwind Traders
+    cap_usd: 25
+    model: claude-opus-5
+    effort: medium
+    deliver_to:
+      - finance@northwind.example
+    instructions: |
+      You extract structured records from supplier invoices.
+
+      Rules:
+      - Dates may appear in any format. Always output YYYY-MM-DD.
+      - Amounts are in USD unless the document states another currency.
+      - Discounts appear as negative line items.
+
+      Set needs_review to true, with a specific reason, whenever the arithmetic
+      does not reconcile or any required figure is unreadable. Never guess.

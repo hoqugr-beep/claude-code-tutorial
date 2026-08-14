@@ -1,0 +1,9 @@
+# Local config and secrets — never commit the filled-in versions
+.env
+clients.yaml
+
+# Runtime state
+ledger.db
+inbox/
+outbox/
+.venv/
