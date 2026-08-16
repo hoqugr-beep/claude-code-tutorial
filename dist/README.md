@@ -24,17 +24,27 @@ API is not exposed to Claude Code.
 ### 2. Claude Code
 
 ```sh
-./scripts/install-task-observer.sh          # installs to ~/.claude/skills/
-./scripts/install-task-observer.sh --check  # show what's installed
+./scripts/install-task-observer.sh              # install / update
+./scripts/install-task-observer.sh --check      # show what's installed
+./scripts/install-task-observer.sh --no-memory  # skip the CLAUDE.md edit
 ```
+
+Two things happen, because availability and activation are separate problems:
+
+1. The skill is copied to `~/.claude/skills/task-observer/`, making it
+   available in every project.
+2. The activation block is appended to `~/.claude/CLAUDE.md`, so every project
+   invokes it — without a config-level instruction the skill falls back to
+   description matching, which upstream calls unenforceable. The edit is
+   idempotent (guarded by an HTML-comment marker) and backs up any existing
+   file first.
 
 Run it on the machine where you use Claude Code — a remote/web session installs
 into a throwaway container, not your laptop. The script falls back to cloning
 upstream if run outside this repo.
 
-This repo's own copy at `.claude/skills/task-observer/` is committed and needs
-no action. For other repos, either rely on the personal install above or copy
-the activation block from this repo's `CLAUDE.md` into theirs.
+This repo's own copy at `.claude/skills/task-observer/` and its `CLAUDE.md`
+block are committed already; the personal install covers everywhere else.
 
 ### Rebuilding the zip after editing the skill
 
