@@ -13,36 +13,60 @@ worthless one is everything around that call: confirming you actually have the
 file, picking a model that keeps what matters, and *looking* at the result
 before handing it over.
 
-## 1. Get the image — and confirm you really have it
+## 1. Ask for a folder path, not a dropped image
 
-If the user has not already supplied a photo, ask for one:
+If the user has not already pointed you at a photo, ask for a **path**, and show
+what one looks like so they don't reach for the attachment button:
 
-> Drop the photo into the chat and I'll cut the subject out of it.
+> Where's the photo? A folder or file path works best — something like
+> `Commitment Graphics\Reference\avery-rumble.jpg`, or just
+> `Commitment Graphics\Reference` and I'll list what's in there.
 
-Then **verify the file exists on disk before doing anything else**:
+Ask this way round because **reading a file from disk is reliable and dropping
+an image into the chat is not.** An attachment can render perfectly in the
+conversation while nothing is written to the filesystem — you can see it and
+still not be able to open it. Asking for a path avoids the whole failure mode,
+and it also means finished files can go straight back into the same folder
+instead of being handed over one at a time.
+
+If they give a folder, list it and confirm which file before running anything:
 
 ```bash
-ls -la /root/.claude/uploads/*/ 2>/dev/null
-find / -xdev \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-  -newermt '-10 minutes' 2>/dev/null | grep -v -E 'node_modules|/usr/share|/opt/|site-packages' | head
+ls -la "PATH/TO/FOLDER"
 ```
 
-This step is not paranoia. **Seeing an image in the conversation and having the
-file are different things**, and they come apart regularly — an attachment can
-render perfectly for you while nothing is written to the filesystem. If you skip
-this check you will happily plan an entire pipeline around bytes you cannot
-open, and only discover it several steps later.
-
-If the file is not on disk, say so immediately and plainly — "I can see it but
-it didn't reach the filesystem" — and offer routes that deliver actual bytes:
-re-attaching, a cloud-storage connector you have verified works, or a repo the
-user can upload to. Do not guess at the pixels and do not proceed as if you have
-the image.
-
-Confirm what you found before continuing:
+If they give a file, confirm it opens and check its size — a subject that is
+small in the source will not survive being placed large in a design:
 
 ```bash
 python3 -c "from PIL import Image; im=Image.open('PATH'); print(im.size, im.mode)"
+```
+
+### When the path is on their machine and you are not
+
+A path like `C:\Users\...` or `~/Desktop/...` only resolves if this session has
+access to that filesystem. Running locally, it does. Running in a cloud
+container, there is no `C:\` and no home folder of theirs — the path will simply
+not exist.
+
+Check rather than assume, and if it is genuinely unreachable, say so in one
+line and name the reason:
+
+```bash
+ls -d /mnt/c /mnt/host 2>/dev/null; mount | grep -iE 'drvfs|cifs|9p' | head
+```
+
+> That path is on your machine and this session is running in the cloud, so I
+> can't reach it. Run Claude Code locally from that folder and this works
+> directly.
+
+Do not fall back to asking them to drop the file in the chat as if that were
+equivalent — if the filesystem is out of reach, attachments are the unreliable
+path you were trying to avoid. Offer it only as a last resort, and check that
+the bytes actually landed before building on them:
+
+```bash
+ls -la /root/.claude/uploads/*/ 2>/dev/null
 ```
 
 ## 2. Run the cutout
