@@ -60,7 +60,8 @@ GitHub is blocked, jump to **Fallbacks** below.
 By default the script runs two general-purpose models and writes, for each:
 
 - `cutout-<model>.png` — the deliverable, trimmed to the subject
-- `check-<model>.png` — the same cutout on a solid colour, for inspection
+- `check-<model>.png` — the same cutout composited across a split white/dark
+  ground, for inspection
 
 ## 3. Choose the model deliberately
 
@@ -87,10 +88,18 @@ the background contains distracting objects near them.
 ## 4. Look at the result — actually look
 
 Read each `check-*.png` with the image viewer. This is the step people skip and
-it is the only one that catches real failures. You are looking for:
+it is the only one that catches real failures. Each render puts the subject
+across a white half and a dark half, because the two common edge faults hide on
+opposite grounds — a pale halo vanishes on dark and screams on white, dark
+fringing does the reverse. Scan both halves.
 
-- **Amputated limbs or equipment** — the most common and most damaging failure
-- **Chewed or halo'd hair edges** — especially against a busy background
+You are looking for:
+
+- **Amputated limbs or equipment** — the most damaging failure
+- **A soft glow around the subject** — the edge should meet the background
+  decisively, not fade into it. On the white half this looks like the subject is
+  lit from behind. It is the most common quality problem and the easiest to fix.
+- **Chewed hair edges** — the opposite fault, from an over-tight matte
 - **Background left in enclosed gaps** — between arm and torso, inside a stick
   head, between legs
 - **Colour fringing** from the old background bleeding into the edge
@@ -99,15 +108,25 @@ If both models produced a clean mask, either is fine — say so rather than
 inventing a distinction. If one dropped something the other kept, that decides
 it.
 
-The script also prints an opaque-pixel and soft-edge-pixel count per model. Use
-these to direct your eye, not to pick a winner: a much lower soft-edge count
-means a tighter, more decisive matte, which is good on a jersey and bad on
-flyaway hair. When the two counts differ a lot, go look at the hairline
-specifically — that is where an over-confident matte does its damage.
+The script prints a `soft/opaque` ratio per model — the share of pixels that are
+partially transparent, which is a direct measure of how wide the feathered edge
+band is. Under ~0.15 is crisp; above ~0.30 there is almost certainly a visible
+glow. Treat it as a pointer to where to look, not a verdict: some softness on
+flyaway hair is correct, and a suspiciously low ratio on a subject with loose
+hair means the matte chewed it off.
 
-If both are poor, adjust and rerun before giving up: raise `--erode-size` when
-edges carry a halo, lower `--bg-threshold` when semi-transparent junk survives
-in the background.
+**If the edges glow, lower `--erode-size` first.** It is by far the most
+sensitive knob — it erodes the mask inward before matting, so a large value
+carves into the subject and forces a wide soft band to bridge the gap. Dropping
+it from 8 to 3 on a light subject halved the soft/opaque ratio (0.27 → 0.12) and
+turned a visibly haloed cutout into a clean one. Nudge `--fg-threshold` down and
+`--bg-threshold` up only after that.
+
+**Do not "fix" a halo by disabling alpha matting.** It sounds like it should
+give a harder edge and it does the opposite: without matting the raw model
+output is a soft probability map, so nearly every pixel comes back partially
+transparent and the whole subject turns ghostly. Matting with tight settings is
+what produces a decisive edge.
 
 ## 5. Deliver
 

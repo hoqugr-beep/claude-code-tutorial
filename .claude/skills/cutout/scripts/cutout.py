@@ -4,14 +4,14 @@
 For each model requested this writes two files:
 
   cutout-<model>.png  the deliverable: transparent, trimmed to the subject
-  check-<model>.png   an inspection render, the cutout composited on a solid
-                      colour so edges, halos and dropped limbs are actually
-                      visible
+  check-<model>.png   an inspection render: the cutout composited across a
+                      split light/dark background
 
 The check render exists because a transparent PNG viewed on its own tells you
 almost nothing -- a missing arm and a clean cut look identical against a
-checkerboard. Compositing on a contrasting colour is what makes mask errors
-obvious.
+checkerboard. The background is split light/dark because the two common edge
+faults hide on opposite grounds: a pale halo is invisible on dark and obvious on
+white, while dark fringing from the old background is the reverse.
 
 Usage:
     python cutout.py PHOTO [-o OUT_DIR] [-m u2net,isnet-general-use]
@@ -31,13 +31,16 @@ def build_parser():
         "-m", "--models", default="u2net,isnet-general-use",
         help="comma-separated rembg models. Default runs two general "
              "salient-object models so their masks can be compared.")
-    p.add_argument("--check-bg", default="#8A222A",
-                   help="solid colour for the inspection render")
+    p.add_argument("--check-bg", default="#1C1C1C",
+                   help="dark half of the inspection render (light half is white)")
     p.add_argument("--no-trim", action="store_true",
                    help="keep the original canvas instead of cropping to the subject")
-    p.add_argument("--fg-threshold", type=int, default=250)
-    p.add_argument("--bg-threshold", type=int, default=15)
-    p.add_argument("--erode-size", type=int, default=8)
+    # Defaults tuned on a light subject against a bright background. erode-size
+    # is the sensitive one: at 8 it bites into the subject and forces a wide
+    # feathered band that reads as a glow once composited.
+    p.add_argument("--fg-threshold", type=int, default=240)
+    p.add_argument("--bg-threshold", type=int, default=20)
+    p.add_argument("--erode-size", type=int, default=3)
     p.add_argument("--check-height", type=int, default=900)
     return p
 
@@ -101,12 +104,15 @@ def main():
         cut_path = os.path.join(args.out_dir, f"cutout-{model}.png")
         out.save(cut_path)
 
-        # Inspection render: subject on a flat colour, scaled for quick viewing.
+        # Inspection render: subject across a split white/dark ground, so a pale
+        # halo and dark fringing are both visible in one image.
         view = out
         if view.height > args.check_height:
             w = round(view.width * args.check_height / view.height)
             view = view.resize((w, args.check_height), Image.LANCZOS)
-        plate = Image.new("RGBA", view.size, bg + (255,))
+        plate = Image.new("RGBA", view.size, (255, 255, 255, 255))
+        dark = Image.new("RGBA", (view.width // 2, view.height), bg + (255,))
+        plate.paste(dark, (view.width - dark.width, 0))
         plate.alpha_composite(view)
         check_path = os.path.join(args.out_dir, f"check-{model}.png")
         plate.convert("RGB").save(check_path)
@@ -115,8 +121,13 @@ def main():
         hist = alpha.histogram()
         soft = sum(hist[1:255])          # partially transparent = matted edge
         opaque = hist[255]
+        ratio = soft / max(1, opaque)
+        verdict = ("crisp" if ratio < 0.15 else
+                   "soft - check for a halo" if ratio < 0.30 else
+                   "very soft - likely a visible glow, retune before shipping")
         print(f"[{model}] subject bbox {bbox} -> {out.size}")
-        print(f"[{model}] opaque px {opaque:,} | soft edge px {soft:,}")
+        print(f"[{model}] opaque {opaque:,} | soft {soft:,} | "
+              f"soft/opaque {ratio:.3f} ({verdict})")
         print(f"[{model}] wrote {cut_path}")
         print(f"[{model}] wrote {check_path}  <-- LOOK AT THIS ONE")
         results.append((model, cut_path, check_path))
