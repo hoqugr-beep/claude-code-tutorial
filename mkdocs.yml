@@ -69,3 +69,4 @@ extra:
 
 nav:
   - Home: index.md
+  - Grok-Style Multi-Agent Architecture: grok-multi-agent-architecture.md
