@@ -2,3 +2,6 @@ site/
 __pycache__/
 *.pyc
 .DS_Store
+apps/paper-trader/report.html
+apps/paper-trader/results.json
+apps/paper-trader/tuning_results.json
