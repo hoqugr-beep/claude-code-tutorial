@@ -282,6 +282,20 @@ def histogram(
 # Page
 # --------------------------------------------------------------------------
 
+# A <link> rather than a CSS @import: an @import blocks the whole stylesheet on
+# a remote fetch, so the page renders as nothing at all when the font host is
+# slow or unreachable.  A link degrades to the fallback stack instead.
+FONT_LINK = (
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+    "family=IBM+Plex+Mono:wght@400;500&"
+    "family=IBM+Plex+Sans:wght@400;500;600&"
+    'family=IBM+Plex+Serif:wght@600&display=swap">'
+)
+
+# IBM Plex, used as a superfamily: Serif for headings (this reads as a risk-desk
+# research note, which is what it is), Sans for prose, Mono for every figure —
+# a trading blotter sets its numbers monospaced, so the report does too.
 CSS = """
 :root {
   color-scheme: light;
@@ -290,7 +304,10 @@ CSS = """
   --text-muted: #7a7873;
   --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #e34948;
   --pos: #1baf7a; --neg: #e34948; --warn: #eda100;
-  --grid: #e6e4de; --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --grid: #e6e4de;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -316,15 +333,16 @@ CSS = """
 [hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--text-primary);
-  font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 400 15px/1.65 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
 .wrap { max-width: 940px; margin: 0 auto; padding-block: 28px; padding-left: 20px; padding-right: 20px; }
-h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.02em; }
-h2 { font-size: 19px; margin: 40px 0 4px; letter-spacing: -0.01em; }
-h3 { font-size: 15px; margin: 22px 0 6px; color: var(--text-secondary); }
-p { color: var(--text-secondary); margin: 8px 0; }
-.lede { font-size: 16px; color: var(--text-secondary); margin-bottom: 4px; }
+h1 { font: 600 32px/1.18 var(--serif); margin: 0 0 8px; letter-spacing: -0.012em; text-wrap: balance; }
+h2 { font: 600 21px/1.3 var(--serif); margin: 44px 0 4px; text-wrap: balance; }
+h3 { font: 600 14px/1.4 var(--sans); margin: 22px 0 6px; color: var(--text-secondary);
+     text-transform: uppercase; letter-spacing: 0.07em; }
+p { color: var(--text-secondary); margin: 9px 0; max-width: 70ch; }
+.lede { font-size: 16.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 4px; max-width: 66ch; }
 .muted { color: var(--text-muted); font-size: 13px; }
 a { color: var(--series-1); }
 .banner {
@@ -337,8 +355,8 @@ a { color: var(--series-1); }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 4px; }
 @media (max-width: 620px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-.tile .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
-.tile .v { font-size: 25px; font-weight: 620; letter-spacing: -0.02em; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.tile .k { font: 500 11px/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.tile .v { font: 500 25px/1.25 var(--mono); letter-spacing: -0.01em; margin-top: 5px; font-variant-numeric: tabular-nums; }
 .tile .s { font-size: 12.5px; color: var(--text-muted); margin-top: 1px; }
 .v.pos { color: var(--pos); } .v.neg { color: var(--neg); }
 .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 14px 0; }
@@ -359,10 +377,12 @@ a { color: var(--series-1); }
   font: 12px/1.45 var(--mono); color: var(--text-primary); white-space: nowrap;
   box-shadow: 0 4px 14px rgba(0,0,0,.12); transform: translate(-50%, -120%); z-index: 5;
 }
-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+td { font-family: var(--mono); font-size: 12.5px; }
+td:first-child { font-family: var(--sans); font-size: 13.5px; }
 th, td { text-align: right; padding: 7px 9px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 th:first-child, td:first-child { text-align: left; font-variant-numeric: normal; }
-th { color: var(--text-muted); font-weight: 560; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+th { color: var(--text-muted); font: 500 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.07em; }
 td.pos { color: var(--pos); } td.neg { color: var(--neg); }
 .scroll { overflow-x: auto; }
 .journal { font-family: var(--mono); font-size: 12.5px; }
@@ -680,13 +700,16 @@ def render(data: ReportData, standalone: bool = True) -> str:
 </div>
 """
     if not standalone:
-        return f"<title>Claude's 30-Day Paper Trading Run</title>\n<style>{CSS}</style>\n{body}\n<script>{JS}</script>"
+        return (f"<title>Claude's 30-Day Paper Trading Run</title>\n{FONT_LINK}\n"
+                f"<style>{CSS}</style>\n{body}\n<script>{JS}</script>")
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude's 30-Day Paper Trading Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+{FONT_LINK}
 <style>{CSS}</style>
 </head>
 <body>
