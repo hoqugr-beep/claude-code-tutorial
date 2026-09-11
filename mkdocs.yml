@@ -69,3 +69,4 @@ extra:
 
 nav:
   - Home: index.md
+  - Example App — stockcast: stock-predictor.md
