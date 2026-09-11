@@ -69,11 +69,36 @@ class RunResult:
 
 
 class AutonomousTrader:
-    def __init__(self, config: SimConfig, market: Market) -> None:
+    """The decision loop, driven identically by the backtest and by live data.
+
+    `account`, `act_from` and `close_at_end` are what let a live run reuse
+    this class unchanged: it restores an existing account, replays earlier
+    bars to warm the indicators *without* trading them, acts only on bars it
+    has not seen before, and leaves open positions open for the next run.
+    Sharing one code path between simulation and live is the point — a
+    separate "live version" of a strategy is a separate set of bugs.
+    """
+
+    def __init__(
+        self,
+        config: SimConfig,
+        market: Market,
+        account: Account | None = None,
+        act_from: int = 0,
+        close_at_end: bool = True,
+        daily_anchor: float | None = None,
+    ) -> None:
         self.cfg = config
         self.risk: RiskConfig = config.risk
         self.market = market
-        self.account = Account(cash=config.risk.starting_cash, venue=config.venue)
+        self.act_from = act_from
+        self.close_at_end = close_at_end
+        # When set, the daily loss limit is measured from this equity instead
+        # of from a bar-counted day boundary (see LiveState.roll_day_anchor).
+        self.daily_anchor = daily_anchor
+        self.account = account if account is not None else Account(
+            cash=config.risk.starting_cash, venue=config.venue
+        )
         self.state = {
             s: SymbolState(config.risk.timescale) for s in market.symbols
         }
@@ -83,7 +108,7 @@ class AutonomousTrader:
         self.cash_curve: list[float] = []
         self.leverage_curve: list[float] = []
         self.daily_equity: list[float] = []
-        self.peak_equity = config.risk.starting_cash
+        self.peak_equity = max(config.risk.starting_cash, self.account.cash)
         self.day_start_equity = config.risk.starting_cash
         self.paused_day: int | None = None
         self.pause_days = 0
@@ -100,9 +125,10 @@ class AutonomousTrader:
     def run(self) -> RunResult:
         m = self.market
         n = m.n_bars
-        self.log(0, "start", "-", self.account.cash,
-                 f"Session opened with ${self.account.cash:,.2f}. Preset: "
-                 f"{self.risk.name}; universe: {', '.join(m.symbols)}.")
+        if self.act_from == 0:
+            self.log(0, "start", "-", self.account.cash,
+                     f"Session opened with ${self.account.cash:,.2f}. Preset: "
+                     f"{self.risk.name}; universe: {', '.join(m.symbols)}.")
 
         for i in range(n):
             bars = {s: m.bars[s][i] for s in m.symbols}
@@ -112,9 +138,17 @@ class AutonomousTrader:
             }
             prices = {s: b.close for s, b in bars.items()}
 
+            # Bars before `act_from` are history: they warm the indicators up
+            # but must not trade, or a live run would re-trade its own past.
+            if i < self.act_from:
+                continue
+
             day = i // BARS_PER_DAY
-            if i % BARS_PER_DAY == 0:
+            if self.daily_anchor is not None:
+                self.day_start_equity = self.daily_anchor
+            elif i % BARS_PER_DAY == 0:
                 self.day_start_equity = self.account.equity(prices)
+            if i % BARS_PER_DAY == 0:
                 if self.paused_day is not None and day > self.paused_day:
                     self.paused_day = None
                     self.log(i, "resume", "-", self.day_start_equity,
@@ -157,16 +191,18 @@ class AutonomousTrader:
                          f"{len(self.account.positions)} open, "
                          f"{len(self.account.trades)} trades closed to date.")
 
-        # Close whatever is still open at the final mark.
         last = {s: m.bars[s][n - 1].close for s in m.symbols}
-        for sym in list(self.account.positions):
-            self.account.close_position(
-                sym, last[sym], n - 1, "end-of-simulation", m.spec[sym].adv_usd
-            )
+        if self.close_at_end:
+            for sym in list(self.account.positions):
+                self.account.close_position(
+                    sym, last[sym], n - 1, "end-of-simulation", m.spec[sym].adv_usd
+                )
         final = self.account.equity(last)
-        self.equity_curve[-1] = final
+        if self.equity_curve:
+            self.equity_curve[-1] = final
+        verb = "Simulation complete" if self.close_at_end else "Session paused, positions held"
         self.log(n - 1, "end", "-", final,
-                 f"Simulation complete. Final equity ${final:,.2f} "
+                 f"{verb}. Equity ${final:,.2f} "
                  f"({final / self.risk.starting_cash - 1:+.1%}).")
 
         return RunResult(

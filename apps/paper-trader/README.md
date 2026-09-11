@@ -55,6 +55,7 @@ Run it yourself and read the distribution, not the single path.
 
 ```
 run_simulation.py         CLI: headline run, Monte Carlo, sensitivity, report
+live_trade.py             CLI: run the paper account against real market data
 tune.py                   parameter search with a train/holdout split
 paper_trader/
   config.py               all assumptions, in one place, with their caveats
@@ -62,8 +63,11 @@ paper_trader/
   exchange.py             margin, fees, funding, liquidation
   indicators.py           incremental EMA / ATR / RSI / Donchian / z-score
   strategy.py             the discrete signal ensemble
-  agent.py                the autonomous decision loop
+  agent.py                the autonomous decision loop (shared by sim and live)
   trend_filter.py         the volatility-targeted continuous-position agent
+  live.py                 real market data from public exchange endpoints
+  state.py                durable account state that survives between runs
+  email_report.py         the daily balance email
   metrics.py              performance statistics
   montecarlo.py           many independent paths, in parallel
   report.py               self-contained HTML report
@@ -192,17 +196,118 @@ achievable target anywhere else.
 
 ---
 
-## Using real data instead
+## Running on real live data
+
+```bash
+python3 live_trade.py --check                     # can this machine reach a venue?
+python3 live_trade.py --venue binance --update    # fetch, decide, persist
+python3 live_trade.py --status                    # read saved state, no network
+python3 live_trade.py --email                     # render the daily balance email
+```
+
+Prices are real. The money is not, and the code has no capacity to make it
+real: there is no API key, no request signing, and no authenticated endpoint
+anywhere in it. It reads public candles and nothing else.
+
+### Read this before trusting it
+
+**No live call has ever been executed against this code.** It was written on
+a machine where every exchange domain — Binance, Coinbase, Kraken,
+CoinGecko — is refused by the network egress policy (HTTP 403 at the proxy),
+via both the shell and every available fetch tool. So:
+
+* Each venue's URL shape and response schema was taken from that venue's
+  **published documentation**, cited in a comment above each adapter — not
+  written from memory.
+* The parsers, the validation, the timestamp alignment, the account
+  persistence and the idempotency are covered by `tests/test_live.py`, which
+  serves documented-shape payloads over real HTTP from a local server.
+* What that cannot tell you is whether a venue's *live* response still
+  matches its documentation, or whether the endpoint is up.
+
+**Run `live_trade.py --check` before believing any of it.** If a schema has
+drifted, the validation in `live.py` is designed to fail loudly rather than
+trade on transposed columns — but verify rather than assume.
+
+### Venues
+
+| Venue | Endpoint | Bars per call | Notes |
+|---|---|---|---|
+| `binance` | `/api/v3/klines` | 1000 | Most liquid. Not available from every country. |
+| `coinbase` | `/products/{id}/candles` | 300 | Columns are `[time, low, high, open, close, volume]` — low and high come *before* open and close, which is a classic transposition trap. Fixed granularities only. |
+| `kraken` | `/0/public/OHLC` | 720 | Renames pairs in the response, so the result key is discovered, not assumed. |
+
+Three venues rather than one because availability differs by country and by
+network policy; if one is blocked for you, another usually is not.
+
+### Details that matter
+
+**The newest candle is always discarded.** Every venue's most recent bar is
+still forming — its high, low and close will all still change. Kraken
+documents this explicitly; it is equally true of the others. Acting on a
+partial bar means acting on numbers that have not settled.
+
+**Spot prices, simulated leverage.** These are spot candles, so there is no
+funding rate and the default is zero. The account still simulates a
+leveraged perpetual on top of real spot prices: margin, liquidation and
+impact are modelled, the funding cost of holding that leverage is not.
+Pass `--funding-rate` to charge a flat one.
+
+**A new account does not backfill.** On first run the fetched history only
+warms the indicators; trading starts from the latest completed bar. Replaying
+history as though those trades had happened would manufacture a track record
+out of nothing.
+
+**Runs are idempotent.** State records the newest bar already acted on, so
+running twice in one morning, or re-running after a crash, does not re-trade
+the same bars.
+
+**The fetch is sized to the gap since the last run.** A fixed window looks
+fine when tested minutes apart and silently skips bars once the job runs
+daily. If the gap exceeds what a venue returns in one call, the run says so
+rather than quietly losing the bars.
+
+**The daily loss limit is anchored to a real UTC date**, not to a count of
+bars — a live run sees only a short window per invocation, so counting bars
+would turn a daily limit into a per-run one.
+
+### State
+
+`live_state.json` holds cash, open positions, closed trades, the high-water
+mark the drawdown breaker depends on, and the last bar acted on. It is
+written atomically (temp file plus rename), because a half-written state file
+is worse than none — the next run would trade from a corrupt account.
+
+The container a scheduled run happens in is discarded afterwards, so for the
+account to survive between runs the state file has to be committed to the
+repository or written to persistent storage.
+
+### Using a CSV export instead
 
 `market.load_csv_market` takes one CSV per symbol with a header row and the
 columns `open,high,low,close,volume_usd`. All files must have the same number
 of rows, aligned in time — the loader does not resample or join on
-timestamps, so do that wherever you exported the data.
+timestamps.
 
-There is deliberately no built-in exchange downloader: pinning this package
-to a specific venue's API shape would add a dependency, a rate limit, and a
-thing to break, for data you can export in one step from wherever you already
-trust.
+---
+
+## The daily balance email
+
+`live_trade.py --email` renders it; `paper_trader/email_report.py` builds
+the subject, plain-text and HTML bodies. Two rules shape it:
+
+* **Never present stale numbers as current.** If the last update could not
+  fetch data, the email leads with `THIS IS NOT A FRESH NUMBER`, names the
+  failure, and labels everything below as last-known state. A balance email
+  that silently repeats yesterday's figure is worse than one that admits it
+  is stuck.
+* **Never let a simulation read as a real account.** The subject is prefixed
+  `[SIM]` and the body says so twice.
+
+Sending is not wired up yet — see the repository's branch notes. The intended
+schedule is 10:00 US Eastern, which is `0 14 * * *` in UTC while EDT is in
+effect. That fixed UTC time becomes 09:00 Eastern when the US leaves daylight
+saving in November, so it needs a one-hour adjustment then.
 
 ---
 
@@ -238,6 +343,9 @@ trading:
 * Bugs in the agent's own code, which in live trading is a leading cause of
   loss.
 * Any market microstructure below the 5-minute bar.
+* Funding on live spot data, which has none — leverage is simulated on top
+  of spot prices, so the cost of carrying it is not charged unless you pass
+  `--funding-rate`.
 
 ---
 
