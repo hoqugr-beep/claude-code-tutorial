@@ -23,3 +23,12 @@ The skill is installed at `.claude/skills/task-observer/`. Load its
 `references/` files on demand rather than up front. Do not chain its
 activation through another skill — a broken chain silences all observation
 activity.
+
+## Bulk operations
+
+Before any task that will make more than about 10 similar changes (labeling
+or archiving emails, creating or renaming Drive files, etc.), tell the user
+up front how many approvals it will take and offer a one-step option first:
+switching the session to Auto mode from the mode dropdown, or adding allow
+rules for those specific tools to `.claude/settings.json`. Don't start the
+batch until they've chosen.
