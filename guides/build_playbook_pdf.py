@@ -232,6 +232,7 @@ story.append(PageBreak())
 # ================================================================ contents
 H1("Contents")
 for line in [
+    "Start here — The Starter Package (recommended first offer)",
     "1. What you are delivering",
     "2. Ground rules: accounts, terms and data",
     "3. How the system works",
@@ -254,6 +255,83 @@ for line in [
 story.append(PageBreak())
 
 # ================================================================ 1
+# ================================================================ starter package
+H1("Start here — The Starter Package")
+P("This is the recommended first offer: the <b>easiest and least expensive</b> way to deliver "
+  "the system. It uses Mode A (the client's own computer and subscriptions), needs no server "
+  "or extra software, and keeps both your costs and the client's as low as possible. The rest "
+  "of this playbook is the full procedure; this section tells you which parts to use first.")
+H2("S.1 What the Starter Package includes")
+T([["Item", "Starter Package", "Add later (upsell)"],
+   ["Where it runs", "One client computer (Mode A)", "More computers, or Mode B cloud server"],
+   ["Users", "One staff member", "More users (each may need their own subscription seats)"],
+   ["Boss", "Grok", "—"],
+   ["Workers", "One paid worker (chosen by testing), plus free tiers where available",
+    "Remaining providers, one at a time"],
+   ["Roles", "3 roles", "More roles, industry role library"],
+   ["Support", "Updates + fixes for the pilot period", "Monthly support plan"]],
+  [1.3, 2.6, 2.6])
+H2("S.2 Costs")
+T([["Who pays", "Item", "Approximate cost (verify current prices)"],
+   ["You", "Private GitHub repository for your master copy", "Free"],
+   ["You", "Remote screen-share / support tool (e.g. Chrome Remote Desktop)", "Free (verify)"],
+   ["You", "Your laptop for building and testing", "Already owned"],
+   ["Client", "Grok subscription (boss)", "Entry plans typically ~$20–30/month (approx.)"],
+   ["Client", "One paid worker subscription", "Entry plans typically ~$20–30/month (approx.)"],
+   ["Client", "Optional extra workers on free tiers", "$0 if free tiers allow it (verify)"],
+   ["Client", "Server / hosting", "None in Mode A"]], [0.8, 3.2, 2.5])
+WARN("Free tiers reported at the time of writing: Gemini CLI with a Google account login, Codex "
+     "with a free ChatGPT account, and free Grok access during the Grok Build beta. I cannot "
+     "confirm these are still offered or that they allow business use; check each provider "
+     "before relying on them, and treat them as testing aids rather than something to promise "
+     "a client.")
+H2("S.3 Choosing the one paid worker: a quick test")
+B(["Take 5 real examples from discovery (Section 5) for the client's most important role.",
+   "Run the same 5 requests through each candidate model (use free tiers or your own accounts "
+   "for this comparison only).",
+   "Score each answer 1–5 for accuracy, following the rules, and needing few edits; have the "
+   "client score them too, without seeing which model wrote which.",
+   "Pick the highest total. Record the scores so you can justify the choice and revisit it "
+   "later."], numbered=True)
+H2("S.4 Four-week pilot plan (one friendly client)")
+T([["Week", "Your work", "Done when"],
+   ["1", "Check provider terms (2.2); package your system (Phase 1); test the install on a "
+         "fresh user account on your laptop", "Clean install works from scratch"],
+   ["2", "Discovery session; write 3 role cards; run the worker test (S.3)",
+    "Client approves the role cards"],
+   ["3", "Pre-install checklist; install; client logs in; acceptance tests (Phases 3–5)",
+    "All tests pass; handover sheet signed"],
+   ["4", "Client uses it daily; short check-in calls; fix issues; note time saved",
+    "Client confirms value; you have a written case study"]], [0.6, 3.9, 2.0])
+H2("S.5 Go / no-go after the pilot")
+CHECKS(["Install took under half a day and needed no unplanned fixes",
+        "The client used it on most working days in week 4",
+        "Staff estimate real time saved (ask for hours per week)",
+        "No rule breaches in output (prices, private data, promises)",
+        "Subscription usage limits were not a regular problem",
+        "Terms check (2.2) found nothing that blocks scripted CLI use"])
+P("If most boxes are ticked, standardise: turn the pilot's roles into templates, fix the "
+  "install script, and set your prices. If subscription limits or terms are a problem, move "
+  "the affected worker to API keys (Mode B approach) for that provider only.")
+H2("S.6 Pricing structure (fill in your own numbers)")
+P("I do not have verified market rates for this kind of service, so the amounts are left for "
+  "you to set. The structure keeps you out of AI billing entirely:")
+T([["Charge", "Covers", "Your price"],
+   ["Setup fee (one-time)", "Discovery, 3 role cards, packaging for the client, install, "
+                            "testing, training", "$ ______"],
+   ["Extra role (one-time)", "Design, testing and install of one more role", "$ ______"],
+   ["Extra worker / seat (one-time)", "Adding a provider or a user computer", "$ ______"],
+   ["Monthly support", "Updates, fixes, small role tweaks, remote help", "$ ______ / month"],
+   ["Pilot discount", "First client, in exchange for feedback and a testimonial", "____ %"],
+   ["AI usage", "Paid by the client directly to each provider", "Not billed by you"]],
+  [1.8, 3.4, 1.3])
+H2("S.7 Upgrade path")
+B(["<b>More workers:</b> add one provider at a time when a role clearly performs better on it.",
+   "<b>More users:</b> install on more computers; confirm seat rules (2.2).",
+   "<b>Mode B:</b> when a client needs shared access from any device, always-on service, or "
+   "many seats — or when pay-per-use API keys would cost less than several subscriptions for "
+   "light usage (Section 11)."])
+story.append(PageBreak())
 H1("1. What you are delivering")
 P("You have built an orchestration system on your laptop: a <b>boss</b> model (Grok) receives a "
   "request, breaks it into tasks, and distributes them to <b>worker</b> models (Claude, Grok, "
