@@ -21,10 +21,11 @@ mkdocs serve                  # live preview at http://127.0.0.1:8000
 mkdocs build --strict         # run before every commit that touches docs/ or mkdocs.yml
 ```
 
-`--strict` fails on warnings only. Broken in-page anchors are reported at INFO
-level and still pass, so read the build output for `no such anchor` lines.
-Heading slugs come from the `toc` extension. Derive TOC links from the built
-page's heading ids, not by hand.
+`mkdocs.yml` sets `validation.anchors: warn`, so `--strict` also fails on broken
+in-page links. Heading ids come from the `toc` extension (`&` and `—` are
+dropped, so `## 2. Installation & Initial Setup` becomes
+`#2-installation-initial-setup`). Take TOC links from the built page's heading
+ids, not by hand.
 
 ## Writing tutorial content
 
@@ -56,5 +57,5 @@ Load the skill's `references/` files on demand, not up front. Invoke it
 directly. Never chain its activation through another skill, because a broken
 chain silences all observation activity.
 
-`scripts/install-task-observer.sh` writes a copy of this activation block to
-`~/.claude/CLAUDE.md`. Keep the two in sync when you edit either one.
+`scripts/install-task-observer.sh` writes the same three paragraphs to
+`~/.claude/CLAUDE.md`, word for word. Edit both together.

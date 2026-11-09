@@ -69,3 +69,7 @@ extra:
 
 nav:
   - Home: index.md
+
+# Report broken in-page anchors as warnings so `mkdocs build --strict` fails on them.
+validation:
+  anchors: warn
