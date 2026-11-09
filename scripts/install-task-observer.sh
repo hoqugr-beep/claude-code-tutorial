@@ -91,21 +91,19 @@ else
   [ -s "${MEMORY}" ] && printf '\n' >> "${MEMORY}"
   cat >> "${MEMORY}" <<EOF
 ${MARKER}
-## task-observer (activation)
+## task-observer skill (activation)
 
-At the start of any task-oriented session — any interaction where you will
-use tools and produce deliverables — invoke the task-observer skill before
-beginning work. This ensures skill improvement opportunities are captured
-throughout the session.
+At the start of any task-oriented session (one where you will use tools and
+produce deliverables), invoke the task-observer skill before beginning work, so
+skill-improvement opportunities are captured for the whole session.
 
-When loading any skill, check the observation log for OPEN observations
-tagged to that skill. Apply their insights to the current work, even if
-the skill file hasn't been updated yet. This enables immediate application
-of observations before they're permanently integrated during the weekly
-review.
+When you load any skill, check the observation log for OPEN observations tagged
+to that skill and apply them now, even if the skill file hasn't been updated
+yet.
 
-Do not chain this skill's activation through another skill — a broken chain
-silences all observation activity.
+Load the skill's \`references/\` files on demand, not up front. Invoke it
+directly. Never chain its activation through another skill, because a broken
+chain silences all observation activity.
 EOF
   echo "Added activation block to ${MEMORY}"
 fi
