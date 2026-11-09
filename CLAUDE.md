@@ -12,3 +12,6 @@ Never commit build output: `site/` is generated and git-ignored.
   updated.
 - Invoke task-observer directly, never via another skill: a broken chain
   silences all observation activity.
+- Its workspace folder is this repo root: keep the log and its state files in
+  `skill-observations/` and commit them. `~/.claude` is wiped between cloud
+  sessions, so anything stored there is lost.
